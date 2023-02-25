@@ -5,6 +5,7 @@ const canvas = document.querySelector('.game-canvas');
 const ctx = canvas.getContext('2d');
 const blockTotal = 45;
 const blockArray = [];
+let score = 0;
 
 // Event Listeners
 rulesBtn.addEventListener('click', toggleRules);
@@ -51,12 +52,20 @@ const player = {
 
 // Instantiate Ball Object
 const ball = {
-  x: canvas.width / 2,
+  x: Math.floor(canvas.width / (Math.random() * (5 - 1.25) + 1.25)),
   y: canvas.height / 2,
   size: 10,
   dy: 2,
-  dx: Math.random() > 0.5 ? 1 : 1,
+  dx: Math.random() > 0.5 ? 1 : -1,
+  xDir: function () {
+    return this.dx > 0 ? 'right' : 'left';
+  },
+  yDir: function () {
+    return this.dy > 0 ? 'down' : 'up';
+  },
 };
+
+console.log(ball.x);
 
 // Draw Player
 function drawPlayer() {
@@ -87,7 +96,6 @@ function drawAllBlocks() {
   for (let i = 0; i < 45; i++) {
     const column = i % 9;
     const row = Math.floor(i / 9);
-    // console.log(`Column: ${column}, Row: ${row}`);
     drawBlock(column, row, i);
   }
 }
@@ -105,16 +113,16 @@ function drawBlock(column, row, i) {
     loadBlockData(
       canvasPad + colGap + blockHeight * row,
       canvasPad + colGap + blockHeight * row + blockHeight,
-      canvasPad + rowGap + blockWidth * column,
-      canvasPad + rowGap + blockWidth * column + blockWidth
+      Math.floor(canvasPad + rowGap + blockWidth * column),
+      Math.floor(canvasPad + rowGap + blockWidth * column + blockWidth)
     );
   }
   if (!blockArray[i].broken) {
     ctx.beginPath();
     ctx.rect(
-      canvasPad + rowGap + blockWidth * column,
+      Math.floor(canvasPad + rowGap + blockWidth * column),
       canvasPad + colGap + blockHeight * row,
-      blockWidth,
+      Math.floor(blockWidth),
       blockHeight
     );
 
@@ -145,6 +153,7 @@ function updateGame() {
   drawPlayer();
   drawBall();
   drawAllBlocks();
+  setScore();
   requestAnimationFrame(updateGame);
 }
 
@@ -171,19 +180,23 @@ function checkBallColl() {
     if (
       ball.y + ball.size >= current.top &&
       ball.y - ball.size <= current.bottom &&
-      (ball.x - ball.size == current.right ||
-        ball.x + ball.size == current.left) &&
+      ((ball.x - ball.size == current.right && ball.xDir() == 'left') ||
+        (ball.x + ball.size == current.left && ball.xDir() == 'right')) &&
       !current.broken
     ) {
+      console.log('side hit');
+      score++;
       current.broken = true;
       ball.dx *= -1;
     } else if (
       ball.x - ball.size < current.right &&
       ball.x + ball.size > current.left &&
-      (ball.y + ball.size == current.top ||
-        ball.y - ball.size == current.bottom) &&
+      ((ball.y + ball.size == current.top && ball.yDir() == 'down') ||
+        (ball.y - ball.size == current.bottom && ball.yDir() == 'up')) &&
       !current.broken
     ) {
+      console.log('vert hit');
+      score++;
       current.broken = true;
       ball.dy *= -1;
     }
@@ -194,9 +207,9 @@ function loadBlockData(top, bottom, left, right) {
   blockArray.push({ top, bottom, left, right, broken: false });
 }
 
-// console.log(`Broken block:
-// Top: ${current.top}
-// Bottom: ${current.bottom}
-// Left: ${current.left}
-// Right: ${current.right}
-//  `);
+// Add Score
+function setScore() {
+  ctx.font = '18px Ariel';
+  ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
+  ctx.font = '200';
+}
