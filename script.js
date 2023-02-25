@@ -18,9 +18,9 @@ window.addEventListener('keyup', () => {
 // Determine direction of the player
 function setPlayerDirection(e) {
   if (e.key === 'ArrowRight') {
-    player.speed = 5;
+    player.speed = 6;
   } else if (e.key === 'ArrowLeft') {
-    player.speed = -5;
+    player.speed = -6;
   }
 }
 
@@ -161,11 +161,10 @@ function updateGame() {
 function checkBallColl() {
   // Collision check for player paddle
   if (
-    ball.y >= player.getY() &&
+    ball.y == player.getY() + 1 &&
     ball.x >= player.getWidthBoundary().wLeft &&
     ball.x <= player.getWidthBoundary().wRight
   ) {
-    console.log('crossed');
     ball.dy *= -1;
   }
   // Border Collision check
@@ -184,7 +183,6 @@ function checkBallColl() {
         (ball.x + ball.size == current.left && ball.xDir() == 'right')) &&
       !current.broken
     ) {
-      console.log('side hit');
       score++;
       current.broken = true;
       ball.dx *= -1;
@@ -195,7 +193,6 @@ function checkBallColl() {
         (ball.y - ball.size == current.bottom && ball.yDir() == 'up')) &&
       !current.broken
     ) {
-      console.log('vert hit');
       score++;
       current.broken = true;
       ball.dy *= -1;
