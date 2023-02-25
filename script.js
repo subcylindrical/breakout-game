@@ -41,6 +41,21 @@ const player = {
   width: 80,
   y: canvas.height - 25,
   x: canvas.width / 2 - 80 / 2,
+  getY: function () {
+    return this.y - this.height;
+  },
+  getWidthBoundary: function () {
+    return { wLeft: this.x, wRight: this.x + this.width };
+  },
+};
+
+// Instantiate Ball Object
+const ball = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  size: 10,
+  dy: 2,
+  dx: Math.random() > 0.5 ? 1 : 1,
 };
 
 // Draw Player
@@ -59,16 +74,7 @@ function movePlayer() {
     player.x = 0;
   } else if (player.x >= canvas.width - player.width) {
     player.x = canvas.width - player.width;
-    console.log(player.x);
   }
-}
-
-// Update Game
-function updateGame() {
-  clear();
-  drawPlayer();
-  drawAllBlocks();
-  requestAnimationFrame(updateGame);
 }
 
 // Clear Canvas
@@ -76,30 +82,121 @@ function clear() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Draw All Block
+// Draw All Blocks
 function drawAllBlocks() {
   for (let i = 0; i < 45; i++) {
     const column = i % 9;
     const row = Math.floor(i / 9);
     // console.log(`Column: ${column}, Row: ${row}`);
-    drawBlock(column, row);
+    drawBlock(column, row, i);
   }
 }
 updateGame();
 drawPlayer();
 drawAllBlocks();
+drawBall();
 
 // Draw Single Block
-function drawBlock(column, row) {
-  ctx.beginPath();
+function drawBlock(column, row, i) {
   let rowGap = column > 0 ? blockGap * column : 0;
   let colGap = row > 0 ? blockGap * row : 0;
-  ctx.rect(
-    canvasPad + rowGap + blockWidth * column,
-    canvasPad + colGap + blockHeight * row,
-    blockWidth,
-    blockHeight
-  );
+
+  if (blockArray.length < 45) {
+    loadBlockData(
+      canvasPad + colGap + blockHeight * row,
+      canvasPad + colGap + blockHeight * row + blockHeight,
+      canvasPad + rowGap + blockWidth * column,
+      canvasPad + rowGap + blockWidth * column + blockWidth
+    );
+  }
+  if (!blockArray[i].broken) {
+    ctx.beginPath();
+    ctx.rect(
+      canvasPad + rowGap + blockWidth * column,
+      canvasPad + colGap + blockHeight * row,
+      blockWidth,
+      blockHeight
+    );
+
+    ctx.fillStyle = '#87a352';
+    ctx.fill();
+  }
+}
+
+// Draw Ball
+function drawBall() {
+  moveBall();
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
   ctx.fillStyle = '#87a352';
   ctx.fill();
 }
+
+// Move Ball
+function moveBall() {
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+  checkBallColl();
+}
+
+// Update Game
+function updateGame() {
+  clear();
+  drawPlayer();
+  drawBall();
+  drawAllBlocks();
+  requestAnimationFrame(updateGame);
+}
+
+// Check Ball Collisions
+function checkBallColl() {
+  // Collision check for player paddle
+  if (
+    ball.y >= player.getY() &&
+    ball.x >= player.getWidthBoundary().wLeft &&
+    ball.x <= player.getWidthBoundary().wRight
+  ) {
+    console.log('crossed');
+    ball.dy *= -1;
+  }
+  // Border Collision check
+  if (ball.x <= 0 || ball.x >= canvas.width) {
+    ball.dx *= -1;
+  }
+  if (ball.y <= 0) {
+    ball.dy *= -1;
+  }
+
+  blockArray.forEach((current) => {
+    if (
+      ball.y + ball.size >= current.top &&
+      ball.y - ball.size <= current.bottom &&
+      (ball.x - ball.size == current.right ||
+        ball.x + ball.size == current.left) &&
+      !current.broken
+    ) {
+      current.broken = true;
+      ball.dx *= -1;
+    } else if (
+      ball.x - ball.size < current.right &&
+      ball.x + ball.size > current.left &&
+      (ball.y + ball.size == current.top ||
+        ball.y - ball.size == current.bottom) &&
+      !current.broken
+    ) {
+      current.broken = true;
+      ball.dy *= -1;
+    }
+  });
+}
+
+function loadBlockData(top, bottom, left, right) {
+  blockArray.push({ top, bottom, left, right, broken: false });
+}
+
+// console.log(`Broken block:
+// Top: ${current.top}
+// Bottom: ${current.bottom}
+// Left: ${current.left}
+// Right: ${current.right}
+//  `);
