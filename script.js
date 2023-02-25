@@ -99,10 +99,6 @@ function drawAllBlocks() {
     drawBlock(column, row, i);
   }
 }
-updateGame();
-drawPlayer();
-drawAllBlocks();
-drawBall();
 
 // Draw Single Block
 function drawBlock(column, row, i) {
@@ -223,3 +219,6 @@ function reset() {
   });
   score = 0;
 }
+
+// Start the Game
+updateGame();
