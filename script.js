@@ -201,6 +201,11 @@ function checkBallColl() {
       ball.dy *= -1;
     }
   });
+  //   Checking for reset
+  if (ball.y >= canvas.height) {
+    reset();
+    ball.dy *= -1;
+  }
 }
 
 function loadBlockData(top, bottom, left, right) {
@@ -212,4 +217,12 @@ function setScore() {
   ctx.font = '18px Ariel';
   ctx.fillText(`Score: ${score}`, canvas.width - 100, 30);
   ctx.font = '200';
+}
+
+// Reset game upon loss
+function reset() {
+  blockArray.forEach((current) => {
+    current.broken = false;
+  });
+  score = 0;
 }
